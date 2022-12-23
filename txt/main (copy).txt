@@ -1,0 +1,239 @@
+import math
+import networkx as nx
+#Definición de plt ¿plot?
+import matplotlib.pyplot as plt
+#import pydot
+#from networkx.drawing.nx_pydot import graphviz_layout
+import pygraphviz
+from networkx.drawing.nx_agraph import graphviz_layout
+import random
+
+
+dedos = 4
+manos = 2
+players = 2
+SL = math.pow(dedos, manos)
+print(f'{SL}')
+RL = math.pow(SL, players)
+print(f'{RL}')
+
+#Creación del Nodo desde el Algoritmo
+#Segmento se genera por cada iteración
+
+
+#Donde están todos los segmentos
+FielName = "grafo.txt"
+Graphtype = nx.DiGraph()
+
+#Lee la lista de segmentos
+G = nx.read_edgelist(FielName, create_using=Graphtype, nodetype=int)
+
+def delEdge(origin, node):
+  global G
+  if (G.in_degree(node) == 1):
+    delNodes(node)
+  else:
+    G.remove_edge(origin, node)
+
+def delNodes(node):
+  global G
+  neigh = list(nx.neighbors(G, node))
+  for n in neigh:
+    if G.in_degree(n) == 1:
+      delNodes(n)
+  G.remove_node(node)
+
+###############################
+# Hojas: Reviza cada nodo
+finales = [x for x in G.nodes() if G.out_degree(x)==0]
+print(f'Finales: {finales}')
+#print(len(nx.dijkstra_path(G, 124, 34)))
+###############################
+
+del_node = 85
+
+
+while del_node not in finales:
+  plt.clf()
+  color_map = []
+  #Dibujo del grafo
+  for node in G:
+    if node < RL: # RL for d=3, m=2, j=2
+      color_map.append('blue')
+    else: 
+      color_map.append('red')
+  options = {
+    "font_size": 8,
+    "font_color": "white",
+    "node_size": 300,
+    "node_color": color_map,
+    "edgecolors": "black",
+    "linewidths": 0.3,
+    "width": 0.2,
+  }
+  plt.figure(1,figsize=(6,5))   
+  pos = graphviz_layout(G, prog="dot")
+  nx.draw_networkx(G, pos=pos, **options)
+  ax = plt.gca()
+  ax.margins(0.25)
+  plt.axis("off")
+  plt.savefig('grafo.png')
+
+  origin_node = del_node
+  neighbors = list(nx.neighbors(G, origin_node))
+
+  if del_node < RL: # RL for d=3, m=2, j=2
+    print('blue turn')
+  else:
+    print('red turn')
+  
+  if len(neighbors)==1:
+    del_node = neighbors[0]
+    print(f'Se seleccionó {del_node}')
+    continue
+  
+  if del_node <= RL:
+    del_node = int(input(f"Choose item in {neighbors}: "))
+  else:
+    #mala praxis :3
+    del_node = random.choice(neighbors)
+    #Mi mala praxis xd 
+    #Es imposible que los 4 sean ceros
+    for n in neighbors:
+      del_node = n
+      #n es el vecino que estoy iterando
+      nodoCont = n
+      
+      while(True):
+        #Que no haya un solo camino
+        if (G.out_degree(nodoCont)==0 or G.out_degree(nodoCont)==2 or G.out_degree(nodoCont)==4):
+          orientacion = G.out_degree(nodoCont)
+          break
+        elif (G.out_degree(nodoCont)==1):
+          
+          neighborsCopy = list(nx.neighbors(G, nodoCont))
+          nodoCont = neighborsCopy[0]
+          
+      if (orientacion==0):
+        #No le favorece ese nodo
+        if (nodoCont>RL):
+          continue
+        #Le favorece, rompe el bucle
+        elif (nodoCont<=RL):
+          break
+      
+      #Ramificación de dos
+      elif (orientacion==2):
+      #NECESITO SALIR DEL ANIDADO DOBLE EN EL CASO SE DE LO FAVORABLE
+        salirDoble = False
+        neighborsRam = list(nx.neighbors(G, nodoCont))
+        #BUSCAR SUS RAMIFICACIONES DE LA MISMA FORMA
+        for n in neighborsRam:
+          #n es el vecino que estoy iterando
+          nodoContRam = n
+          
+          while(True):
+            #Que no haya un solo camino
+            if (G.out_degree(nodoContRam)==0 or G.out_degree(nodoContRam)==2 or G.out_degree(nodoContRam)==4):
+              orientacion = G.out_degree(nodoContRam)
+              break
+            elif (G.out_degree(nodoContRam)==1):
+              
+              neighborsCopy = list(nx.neighbors(G, nodoCont))
+              nodoContRam = neighborsCopy[0]
+              
+          if (orientacion==0):
+            #No le favorece ese nodo
+            if (nodoContRam>RL):
+              continue
+            #Le favorece, rompe el bucle
+            elif (nodoContRam<=RL):
+              salirDoble = True
+              break
+          
+          #Ramificación de dos
+          elif (orientacion==2):
+            #Si la maquina decide la ramificación
+            if (nodoContRam>RL):
+              salirDoble = True
+              break
+            #Si la persona decide, se continua con bucle
+            elif (nodoContRam<=RL):
+              continue
+          
+          #No importa quien la diriga
+          elif (orientacion==4):
+            salirDoble = True
+            break
+        # Esta es la IA B)
+        #SI SE SALE Y SALIR DOBLE EN TRUE
+        if (salirDoble):
+          #Encontró uno que cumple
+          break
+
+        #Si la maquina decide la ramificación
+        #if (nodoCont>RL):
+          #break
+        #Si la persona decide, se continua con bucle
+        #elif (nodoCont<=RL):
+          #continue
+      
+      #No importa quien la diriga
+      elif (orientacion==4):
+        #NECESITO SALIR DEL ANIDADO DOBLE EN EL CASO SE DE LO FAVORABLE
+        salirDoble = False
+        neighborsRam = list(nx.neighbors(G, nodoCont))
+        #BUSCAR SUS RAMIFICACIONES DE LA MISMA FORMA
+        for n in neighborsRam:
+          #n es el vecino que estoy iterando
+          nodoContRam = n
+          
+          while(True):
+            #Que no haya un solo camino
+            if (G.out_degree(nodoContRam)==0 or G.out_degree(nodoContRam)==2 or G.out_degree(nodoContRam)==4):
+              orientacion = G.out_degree(nodoContRam)
+              break
+            elif (G.out_degree(nodoContRam)==1):
+              
+              neighborsCopy = list(nx.neighbors(G, nodoCont))
+              nodoContRam = neighborsCopy[0]
+              
+          if (orientacion==0):
+            #No le favorece ese nodo
+            if (nodoContRam>RL):
+              continue
+            #Le favorece, rompe el bucle
+            elif (nodoContRam<=RL):
+              salirDoble = True
+              break
+          
+          #Ramificación de dos
+          elif (orientacion==2):
+            #Si la maquina decide la ramificación
+            if (nodoContRam>RL):
+              salirDoble = True
+              break
+            #Si la persona decide, se continua con bucle
+            elif (nodoContRam<=RL):
+              continue
+          
+          #No importa quien la diriga
+          elif (orientacion==4):
+            salirDoble = True
+            break
+        # Esta es la IA B)
+        #SI SE SALE Y SALIR DOBLE EN TRUE
+        if (salirDoble):
+          break
+          #Encontró uno que cumple
+    # Esta es la IA B)
+
+  print(f'Se seleccionó {del_node}')
+  neighbors.remove(del_node)
+  for node in neighbors:
+    delEdge(origin_node, node)
+
+if del_node < RL: # RL for d=3, m=2, j=2
+  print('winner red')
+else: 
+  print('winner blue')

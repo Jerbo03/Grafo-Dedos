@@ -1,0 +1,10 @@
+Evaluación de Nodos
+1. El nodo debe llevar a un final favorable (CORREGIR :'v)
+2. CASO 1: El siguiente jugador, tiene un solo camino. JUGAR ESE LADO
+
+3. CASO 2: El siguiente jugador tiene más de un camino. SEGUIR EL ALGORITMO.
+4. EVALUAR JUGADA ADVERSARIA:
+5. Si hay camino directo hacia la victoria adversaria. IGNORAR NODO
+6. Si hay más de un camino:
+7. Si el nodo que decide es azul. IGNORAR
+8. Si no, tomar :3
